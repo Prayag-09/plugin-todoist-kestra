@@ -1,0 +1,43 @@
+id: daily-standup-tasks
+namespace: demo.todoist
+
+description: Create daily standup tasks with different priorities
+
+tasks:
+  - id: create_high_priority
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Review production deployment"
+    taskDescription: "Check all production services are running smoothly"
+    priority: 4
+    dueString: "today"
+
+  - id: create_medium_priority
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Update documentation"
+    taskDescription: "Update API documentation with new endpoints"
+    priority: 3
+    dueString: "today"
+
+  - id: create_low_priority
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Code review"
+    taskDescription: "Review team's pull requests"
+    priority: 2
+    dueString: "today"
+
+  - id: list_all_tasks
+    type: io.kestra.plugin.todoist.ListTasks
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+
+  - id: summary
+    type: io.kestra.core.tasks.log.Log
+    message: |
+      Created 3 tasks for today:
+      - High Priority: {{ outputs.create_high_priority.taskId }}
+      - Medium Priority: {{ outputs.create_medium_priority.taskId }}
+      - Low Priority: {{ outputs.create_low_priority.taskId }}
+
+      Total tasks: {{ outputs.list_all_tasks.count }}

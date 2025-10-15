@@ -1,0 +1,39 @@
+id: get-and-update-workflow
+namespace: demo.todoist
+
+description: Complete workflow demonstrating create, get, update, and delete operations
+
+inputs:
+  - id: task_content
+    type: STRING
+    defaults: "Sample task from Kestra"
+
+tasks:
+  - id: create_task
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "{{ inputs.task_content }}"
+    taskDescription: "Created at {{ execution.startDate }}"
+    priority: 2
+
+  - id: get_task
+    type: io.kestra.plugin.todoist.GetTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+
+  - id: update_task
+    type: io.kestra.plugin.todoist.UpdateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+    content: "{{ inputs.task_content }} - UPDATED"
+    priority: 4
+
+  - id: log_updated
+    type: io.kestra.core.tasks.log.Log
+    message: "Task updated: {{ outputs.update_task.content }}"
+
+  - id: delete_task
+    type: io.kestra.plugin.todoist.DeleteTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"

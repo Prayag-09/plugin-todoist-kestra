@@ -1,0 +1,34 @@
+id: conditional-task-creation
+namespace: demo.todoist
+
+description: Create tasks based on conditions (e.g., if many tasks exist, create a review task)
+
+inputs:
+  - id: task_threshold
+    type: INT
+    defaults: 5
+
+tasks:
+  - id: list_tasks
+    type: io.kestra.plugin.todoist.ListTasks
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+
+  - id: check_threshold
+    type: io.kestra.core.tasks.flows.If
+    condition: "{{ outputs.list_tasks.count > inputs.task_threshold }}"
+    then:
+      - id: create_review_task
+        type: io.kestra.plugin.todoist.CreateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        content: "⚠️ Too many tasks today!"
+        taskDescription: "You have {{ outputs.list_tasks.count }} tasks. Consider prioritizing."
+        priority: 4
+        dueString: "today"
+
+      - id: log_warning
+        type: io.kestra.core.tasks.log.Log
+        message: "Warning: {{ outputs.list_tasks.count }} tasks found. Review task created."
+    else:
+      - id: log_ok
+        type: io.kestra.core.tasks.log.Log
+        message: "All good! Only {{ outputs.list_tasks.count }} tasks today."

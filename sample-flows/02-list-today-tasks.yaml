@@ -1,0 +1,13 @@
+id: list-today-tasks
+namespace: demo.todoist
+
+description: List all tasks from Todoist
+
+tasks:
+  - id: list_tasks
+    type: io.kestra.plugin.todoist.ListTasks
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+
+  - id: log_count
+    type: io.kestra.core.tasks.log.Log
+    message: "Found {{ outputs.list_tasks.count }} tasks"
