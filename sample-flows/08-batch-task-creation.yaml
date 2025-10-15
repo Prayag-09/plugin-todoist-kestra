@@ -1,0 +1,37 @@
+id: batch-task-creation
+namespace: demo.todoist
+
+description: Create multiple tasks from a list using EachSequential
+
+inputs:
+  - id: tasks_to_create
+    type: ARRAY
+    itemType: STRING
+    defaults:
+      - "Write unit tests"
+      - "Update README"
+      - "Review security audit"
+      - "Deploy to staging"
+
+tasks:
+  - id: create_tasks
+    type: io.kestra.plugin.core.flow.EachSequential
+    value: "{{ inputs.tasks_to_create }}"
+    tasks:
+      - id: create_single_task
+        type: io.kestra.plugin.todoist.CreateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        content: "{{ taskrun.value }}"
+        priority: 2
+        dueString: "tomorrow"
+
+  - id: list_all_tasks
+    type: io.kestra.plugin.todoist.ListTasks
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+
+  - id: summary
+    type: io.kestra.core.tasks.log.Log
+    message: |
+      Batch creation complete!
+      Created {{ inputs.tasks_to_create | length }} tasks
+      Total tasks in Todoist: {{ outputs.list_all_tasks.count }}

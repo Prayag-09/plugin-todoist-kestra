@@ -1,0 +1,42 @@
+id: update-and-delete-task
+namespace: demo.todoist
+
+description: Demonstrates updating and deleting tasks
+
+tasks:
+  - id: create_task
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Task to be updated and deleted"
+    priority: 1
+
+  - id: update_priority
+    type: io.kestra.plugin.todoist.UpdateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+    priority: 4
+    dueString: "tomorrow"
+
+  - id: log_update
+    type: io.kestra.core.tasks.log.Log
+    message: "Task {{ outputs.create_task.taskId }} updated to urgent priority"
+
+  - id: update_content
+    type: io.kestra.plugin.todoist.UpdateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+    content: "Updated task content"
+    taskDescription: "This task was updated via Kestra"
+
+  - id: log_content_update
+    type: io.kestra.core.tasks.log.Log
+    message: "Task content updated: {{ outputs.update_content.content }}"
+
+  - id: delete_task
+    type: io.kestra.plugin.todoist.DeleteTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: log_deletion
+    type: io.kestra.core.tasks.log.Log
+    message: "Task {{ outputs.create_task.taskId }} deleted successfully"

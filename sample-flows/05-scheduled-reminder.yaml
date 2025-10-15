@@ -1,0 +1,22 @@
+id: scheduled-reminder
+namespace: demo.todoist
+
+description: Scheduled flow that creates a reminder task every day at 9 AM
+
+tasks:
+  - id: create_reminder
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Daily reminder: Check team progress"
+    taskDescription: "Review team's progress and blockers"
+    priority: 3
+    dueString: "today at 10:00"
+
+  - id: notify
+    type: io.kestra.core.tasks.log.Log
+    message: "Daily reminder created: {{ outputs.create_reminder.url }}"
+
+triggers:
+  - id: daily_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 9 * * *"  # Every day at 9 AM

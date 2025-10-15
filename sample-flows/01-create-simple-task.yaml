@@ -1,0 +1,12 @@
+id: create-simple-task
+namespace: demo.todoist
+
+description: Create a simple task in Todoist
+
+tasks:
+  - id: create_task
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Review pull requests"
+    taskDescription: "Check and review all pending PRs"
+    priority: 3

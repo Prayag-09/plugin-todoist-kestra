@@ -1,0 +1,28 @@
+id: create-and-complete
+namespace: demo.todoist
+
+description: Create a task and immediately complete it
+
+tasks:
+  - id: create_task
+    type: io.kestra.plugin.todoist.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Automated task from Kestra"
+    taskDescription: "This task will be auto-completed"
+    priority: 2
+
+  - id: log_created
+    type: io.kestra.core.tasks.log.Log
+    message: |
+      Task created successfully!
+      ID: {{ outputs.create_task.taskId }}
+      URL: {{ outputs.create_task.url }}
+
+  - id: complete_task
+    type: io.kestra.plugin.todoist.CompleteTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: log_completed
+    type: io.kestra.core.tasks.log.Log
+    message: "Task {{ outputs.create_task.taskId }} completed!"
