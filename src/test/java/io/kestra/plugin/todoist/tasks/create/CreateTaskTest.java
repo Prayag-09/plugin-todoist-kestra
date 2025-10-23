@@ -1,9 +1,10 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.create;
 
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.plugin.todoist.models.TaskOutput;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -17,8 +18,6 @@ class CreateTaskTest {
 
     @Test
     void testCreateTask() throws Exception {
-        // This test requires a valid Todoist API token
-        // Set TODOIST_API_TOKEN environment variable to run this test
         String apiToken = System.getenv("TODOIST_API_TOKEN");
         
         if (apiToken == null || apiToken.isEmpty()) {
@@ -35,7 +34,7 @@ class CreateTaskTest {
             .priority(Property.of(1))
             .build();
 
-        CreateTask.Output output = task.run(runContext);
+        TaskOutput output = task.run(runContext);
 
         assertThat(output.getTaskId(), notNullValue());
         assertThat(output.getContent(), is("Test task from Kestra"));

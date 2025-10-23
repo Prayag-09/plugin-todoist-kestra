@@ -1,13 +1,13 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.delete;
 
-import io.kestra.core.http.HttpRequest;
-import io.kestra.core.http.HttpResponse;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.models.tasks.VoidOutput;
 import io.kestra.core.runners.RunContext;
+import io.kestra.plugin.todoist.client.TodoistClient;
+import io.kestra.plugin.todoist.common.AbstractTodoistTask;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -50,15 +50,8 @@ public class DeleteTask extends AbstractTodoistTask implements RunnableTask<Void
         String rToken = runContext.render(apiToken).as(String.class).orElseThrow();
         String rTaskId = runContext.render(taskId).as(String.class).orElseThrow();
         
-        HttpRequest request = createRequestBuilder(rToken, BASE_URL + "/tasks/" + rTaskId)
-            .method("DELETE")
-            .build();
-        
-        HttpResponse<String> response = sendRequest(runContext, request);
-        
-        if (response.getStatus().getCode() >= 400) {
-            throw new Exception("Failed to delete task: " + response.getStatus().getCode() + " - " + response.getBody());
-        }
+        TodoistClient client = new TodoistClient(runContext, rToken, BASE_URL);
+        client.delete("/tasks/" + rTaskId);
         
         logger.info("Task {} deleted successfully", rTaskId);
         

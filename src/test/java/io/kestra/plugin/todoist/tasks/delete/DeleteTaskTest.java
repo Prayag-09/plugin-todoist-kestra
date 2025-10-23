@@ -1,9 +1,12 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.delete;
 
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.plugin.todoist.tasks.create.CreateTask;
+import io.kestra.plugin.todoist.tasks.read.GetTask;
+import io.kestra.plugin.todoist.models.TaskOutput;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +35,7 @@ class DeleteTaskTest {
             .content(Property.of("Test task for deletion"))
             .build();
 
-        CreateTask.Output createOutput = createTask.run(runContext);
+        TaskOutput createOutput = createTask.run(runContext);
         String taskId = createOutput.getTaskId();
 
         assertThat(taskId, notNullValue());
@@ -56,7 +59,7 @@ class DeleteTaskTest {
             throw new AssertionError("Expected task to be deleted");
         } catch (Exception e) {
             // Expected - task should not exist
-            assertThat(e.getMessage(), containsString("Failed to get task"));
+            assertThat(e.getMessage(), containsString("API request failed"));
         }
     }
 }

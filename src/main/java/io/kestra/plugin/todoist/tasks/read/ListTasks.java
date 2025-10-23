@@ -1,13 +1,12 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.read;
 
-import io.kestra.core.http.HttpRequest;
-import io.kestra.core.http.HttpResponse;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.plugin.todoist.client.TodoistClient;
+import io.kestra.plugin.todoist.common.AbstractTodoistTask;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -56,26 +55,16 @@ public class ListTasks extends AbstractTodoistTask implements RunnableTask<ListT
         
         String rToken = runContext.render(apiToken).as(String.class).orElseThrow();
         
-        StringBuilder urlBuilder = new StringBuilder(BASE_URL + "/tasks");
+        StringBuilder urlBuilder = new StringBuilder("/tasks");
         
         runContext.render(projectId).as(String.class).ifPresent(p -> {
             urlBuilder.append("?project_id=").append(p);
         });
         
-        String url = urlBuilder.toString();
+        String endpoint = urlBuilder.toString();
         
-        HttpRequest request = createRequestBuilder(rToken, url)
-            .method("GET")
-            .build();
-        
-        HttpResponse<String> response = sendRequest(runContext, request);
-        
-        if (response.getStatus().getCode() >= 400) {
-            throw new Exception("Failed to list tasks: " + response.getStatus().getCode() + " - " + response.getBody());
-        }
-        
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> tasks = JacksonMapper.ofJson().readValue(response.getBody(), List.class);
+        TodoistClient client = new TodoistClient(runContext, rToken, BASE_URL);
+        List<Map<String, Object>> tasks = client.getList(endpoint);
         
         logger.info("Retrieved {} tasks", tasks.size());
         

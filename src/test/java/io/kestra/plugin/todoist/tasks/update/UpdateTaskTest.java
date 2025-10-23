@@ -1,9 +1,12 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.update;
 
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.runners.RunContextFactory;
 import io.kestra.core.junit.annotations.KestraTest;
+import io.kestra.plugin.todoist.tasks.create.CreateTask;
+import io.kestra.plugin.todoist.tasks.delete.DeleteTask;
+import io.kestra.plugin.todoist.models.TaskOutput;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +35,7 @@ class UpdateTaskTest {
             .content(Property.of("Test task for update"))
             .build();
 
-        CreateTask.Output createOutput = createTask.run(runContext);
+        TaskOutput createOutput = createTask.run(runContext);
         String taskId = createOutput.getTaskId();
 
         // Update the task
@@ -43,7 +46,7 @@ class UpdateTaskTest {
             .priority(Property.of(4))
             .build();
 
-        UpdateTask.Output updateOutput = updateTask.run(runContext);
+        TaskOutput updateOutput = updateTask.run(runContext);
 
         assertThat(updateOutput.getTaskId(), equalTo(taskId));
         assertThat(updateOutput.getContent(), equalTo("Updated test task"));

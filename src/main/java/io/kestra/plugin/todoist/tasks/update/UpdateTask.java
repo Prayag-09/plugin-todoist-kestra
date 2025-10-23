@@ -1,13 +1,13 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.update;
 
-import io.kestra.core.http.HttpRequest;
-import io.kestra.core.http.HttpResponse;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.plugin.todoist.client.TodoistClient;
+import io.kestra.plugin.todoist.common.AbstractTodoistTask;
+import io.kestra.plugin.todoist.models.TaskOutput;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -47,7 +47,7 @@ import java.util.Map;
         )
     }
 )
-public class UpdateTask extends AbstractTodoistTask implements RunnableTask<UpdateTask.Output> {
+public class UpdateTask extends AbstractTodoistTask implements RunnableTask<TaskOutput> {
     
     @Schema(
         title = "Task ID",
@@ -81,7 +81,7 @@ public class UpdateTask extends AbstractTodoistTask implements RunnableTask<Upda
     private Property<String> dueString;
 
     @Override
-    public Output run(RunContext runContext) throws Exception {
+    public TaskOutput run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
         
         String rToken = runContext.render(apiToken).as(String.class).orElseThrow();
@@ -98,50 +98,15 @@ public class UpdateTask extends AbstractTodoistTask implements RunnableTask<Upda
             throw new IllegalArgumentException("At least one field must be provided to update");
         }
         
-        String jsonBody = JacksonMapper.ofJson().writeValueAsString(requestBody);
-        
-        HttpRequest request = createRequestBuilder(rToken, BASE_URL + "/tasks/" + rTaskId)
-            .method("POST")
-            .body(HttpRequest.StringRequestBody.builder().content(jsonBody).build())
-            .build();
-        
-        HttpResponse<String> response = sendRequest(runContext, request);
-        
-        if (response.getStatus().getCode() >= 400) {
-            throw new Exception("Failed to update task: " + response.getStatus().getCode() + " - " + response.getBody());
-        }
+        TodoistClient client = new TodoistClient(runContext, rToken, BASE_URL);
+        Map<String, Object> result = client.post("/tasks/" + rTaskId, requestBody);
         
         logger.info("Task {} updated successfully", rTaskId);
         
-        @SuppressWarnings("unchecked")
-        Map<String, Object> result = JacksonMapper.ofJson().readValue(response.getBody(), Map.class);
-        
-        return Output.builder()
+        return TaskOutput.builder()
             .taskId(result.get("id").toString())
             .content(result.get("content").toString())
             .url(result.get("url").toString())
             .build();
-    }
-
-    @Builder
-    @Getter
-    public static class Output implements io.kestra.core.models.tasks.Output {
-        @Schema(
-            title = "Task ID",
-            description = "The ID of the updated task"
-        )
-        private final String taskId;
-        
-        @Schema(
-            title = "Task content",
-            description = "The updated content of the task"
-        )
-        private final String content;
-        
-        @Schema(
-            title = "Task URL",
-            description = "The URL to view the task in Todoist"
-        )
-        private final String url;
     }
 }
