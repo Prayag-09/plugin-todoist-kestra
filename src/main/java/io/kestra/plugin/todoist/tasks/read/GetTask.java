@@ -1,13 +1,12 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.read;
 
-import io.kestra.core.http.HttpRequest;
-import io.kestra.core.http.HttpResponse;
 import io.kestra.core.models.annotations.Example;
 import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
 import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.JacksonMapper;
+import io.kestra.plugin.todoist.client.TodoistClient;
+import io.kestra.plugin.todoist.common.AbstractTodoistTask;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -52,18 +51,8 @@ public class GetTask extends AbstractTodoistTask implements RunnableTask<GetTask
         String rToken = runContext.render(apiToken).as(String.class).orElseThrow();
         String rTaskId = runContext.render(taskId).as(String.class).orElseThrow();
         
-        HttpRequest request = createRequestBuilder(rToken, BASE_URL + "/tasks/" + rTaskId)
-            .method("GET")
-            .build();
-        
-        HttpResponse<String> response = sendRequest(runContext, request);
-        
-        if (response.getStatus().getCode() >= 400) {
-            throw new Exception("Failed to get task: " + response.getStatus().getCode() + " - " + response.getBody());
-        }
-        
-        @SuppressWarnings("unchecked")
-        Map<String, Object> task = JacksonMapper.ofJson().readValue(response.getBody(), Map.class);
+        TodoistClient client = new TodoistClient(runContext, rToken, BASE_URL);
+        Map<String, Object> task = client.get("/tasks/" + rTaskId);
         
         logger.info("Task {} retrieved successfully", rTaskId);
         

@@ -1,4 +1,4 @@
-package io.kestra.plugin.todoist;
+package io.kestra.plugin.todoist.tasks.read;
 
 import io.kestra.core.models.property.Property;
 import io.kestra.core.runners.RunContext;

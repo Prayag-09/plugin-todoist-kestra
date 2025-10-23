@@ -2,9 +2,27 @@
 
 Integrate Todoist task management with Kestra workflows. Create, list, and complete tasks programmatically as part of your automation pipelines.
 
+## Plugin Architecture
+
+The plugin is organized into a clean, modular structure:
+
+```
+io.kestra.plugin.todoist/
+├── client/          # HTTP client abstraction
+├── common/          # Shared base classes
+├── models/          # Data transfer objects
+└── tasks/           # Task operations
+    ├── create/      # Task creation
+    ├── read/        # Task retrieval
+    ├── update/      # Task modification
+    └── delete/      # Task deletion
+```
+
 ## Available Tasks
 
-### CreateTask
+### Task Creation
+
+#### CreateTask (`io.kestra.plugin.todoist.tasks.create.CreateTask`)
 
 Creates a new task in Todoist.
 
@@ -22,9 +40,10 @@ Creates a new task in Todoist.
 - `taskId`: ID of the created task
 - `content`: Task content
 - `url`: URL to view the task
-- `response`: Full API response
 
-### ListTasks
+### Task Retrieval
+
+#### ListTasks (`io.kestra.plugin.todoist.tasks.read.ListTasks`)
 
 Retrieves a list of tasks from Todoist.
 
@@ -32,14 +51,13 @@ Retrieves a list of tasks from Todoist.
 
 - `apiToken` (required): Your Todoist API token
 - `projectId` (optional): Filter by project ID
-- `filter` (optional): Custom filter (e.g., "today", "overdue", "priority 1")
 
 **Outputs:**
 
 - `tasks`: List of task objects
 - `count`: Number of tasks retrieved
 
-### GetTask
+#### GetTask (`io.kestra.plugin.todoist.tasks.read.GetTask`)
 
 Retrieves details of a specific task.
 
@@ -51,10 +69,29 @@ Retrieves details of a specific task.
 **Outputs:**
 
 - `task`: Complete task object
-- `taskId`: Task ID
-- `content`: Task content
 
-### CompleteTask
+### Task Modification
+
+#### UpdateTask (`io.kestra.plugin.todoist.tasks.update.UpdateTask`)
+
+Updates an existing task.
+
+**Parameters:**
+
+- `apiToken` (required): Your Todoist API token
+- `taskId` (required): ID of the task to update
+- `content` (optional): New task content
+- `taskDescription` (optional): New description
+- `priority` (optional): New priority (1-4)
+- `dueString` (optional): New due date
+
+**Outputs:**
+
+- `taskId`: ID of the updated task
+- `content`: Updated content
+- `url`: URL to view the task
+
+#### CompleteTask (`io.kestra.plugin.todoist.tasks.update.CompleteTask`)
 
 Marks a task as completed.
 
@@ -63,10 +100,16 @@ Marks a task as completed.
 - `apiToken` (required): Your Todoist API token
 - `taskId` (required): ID of the task to complete
 
-**Outputs:**
+### Task Deletion
 
-- `taskId`: ID of the completed task
-- `success`: Boolean indicating success
+#### DeleteTask (`io.kestra.plugin.todoist.tasks.delete.DeleteTask`)
+
+Permanently deletes a task.
+
+**Parameters:**
+
+- `apiToken` (required): Your Todoist API token
+- `taskId` (required): ID of the task to delete
 
 ## Getting Started
 
