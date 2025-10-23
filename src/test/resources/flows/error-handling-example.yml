@@ -1,0 +1,31 @@
+id: error-handling-example
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Demonstrates error handling and retry logic with Todoist tasks.
+  Shows how to handle API failures gracefully.
+
+tasks:
+  - id: try_create_task
+    type: io.kestra.core.tasks.flows.Try
+    tasks:
+      - id: create_task
+        type: io.kestra.plugin.todoist.tasks.create.CreateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        content: "Task with error handling"
+        priority: 2
+
+      - id: log_success
+        type: io.kestra.core.tasks.log.Log
+        message: "Task created successfully: {{ outputs.create_task.taskId }}"
+
+    errors:
+      - id: handle_error
+        type: io.kestra.core.tasks.log.Log
+        message: "Failed to create task: {{ error.message }}"
+        level: ERROR
+
+      - id: send_notification
+        type: io.kestra.core.tasks.log.Log
+        message: "Notification: Task creation failed, please check API token and connectivity"
+        level: WARN

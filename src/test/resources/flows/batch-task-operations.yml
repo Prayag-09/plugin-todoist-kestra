@@ -1,0 +1,52 @@
+id: batch-task-operations
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Batch operations example: Create multiple tasks from a list,
+  update them, and then complete them in bulk.
+
+inputs:
+  - id: task_list
+    type: ARRAY
+    defaults:
+      - "Review documentation"
+      - "Update tests"
+      - "Fix bug #123"
+      - "Deploy to staging"
+
+tasks:
+  - id: create_tasks
+    type: io.kestra.core.tasks.flows.EachSequential
+    value: "{{ inputs.task_list }}"
+    tasks:
+      - id: create_single_task
+        type: io.kestra.plugin.todoist.tasks.create.CreateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        content: "{{ taskrun.value }}"
+        priority: 2
+        dueString: "today"
+
+      - id: log_created
+        type: io.kestra.core.tasks.log.Log
+        message: "Created task: {{ outputs.create_single_task.taskId }} - {{ taskrun.value }}"
+
+  - id: wait_before_completion
+    type: io.kestra.core.tasks.flows.Sleep
+    duration: PT5S
+
+  - id: complete_all_tasks
+    type: io.kestra.core.tasks.flows.EachSequential
+    value: "{{ outputs.create_tasks.taskrun }}"
+    tasks:
+      - id: complete_task
+        type: io.kestra.plugin.todoist.tasks.update.CompleteTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        taskId: "{{ taskrun.value.outputs.create_single_task.taskId }}"
+
+      - id: log_completed
+        type: io.kestra.core.tasks.log.Log
+        message: "Completed task: {{ taskrun.value.outputs.create_single_task.taskId }}"
+
+  - id: summary
+    type: io.kestra.core.tasks.log.Log
+    message: "Batch operation completed: Created and completed {{ inputs.task_list | length }} tasks"

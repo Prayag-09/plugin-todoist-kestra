@@ -1,0 +1,36 @@
+id: webhook-triggered-task
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Create a Todoist task when a webhook is triggered.
+  Useful for integrating with external systems.
+
+inputs:
+  - id: task_content
+    type: STRING
+    required: true
+  - id: task_priority
+    type: INT
+    defaults: 1
+  - id: task_due
+    type: STRING
+    defaults: "today"
+
+tasks:
+  - id: validate_input
+    type: io.kestra.core.tasks.log.Log
+    message: "Creating task: {{ inputs.task_content }}"
+
+  - id: create_task
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "{{ inputs.task_content }}"
+    priority: "{{ inputs.task_priority }}"
+    dueString: "{{ inputs.task_due }}"
+
+  - id: log_result
+    type: io.kestra.core.tasks.log.Log
+    message: |
+      Task created successfully!
+      ID: {{ outputs.create_task.taskId }}
+      URL: {{ outputs.create_task.url }}

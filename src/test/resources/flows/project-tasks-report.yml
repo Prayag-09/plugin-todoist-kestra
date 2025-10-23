@@ -1,0 +1,33 @@
+id: project-tasks-report
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Generate a report of all projects and their tasks.
+  This flow demonstrates data aggregation and reporting.
+
+tasks:
+  - id: list_projects
+    type: io.kestra.plugin.todoist.tasks.read.ListProjects
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+
+  - id: log_projects
+    type: io.kestra.core.tasks.log.Log
+    message: "Found {{ outputs.list_projects.count }} projects"
+
+  - id: process_each_project
+    type: io.kestra.core.tasks.flows.EachSequential
+    value: "{{ outputs.list_projects.projects }}"
+    tasks:
+      - id: get_project_details
+        type: io.kestra.plugin.todoist.tasks.read.GetProject
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        projectId: "{{ taskrun.value.id }}"
+
+      - id: list_project_tasks
+        type: io.kestra.plugin.todoist.tasks.read.ListTasks
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        projectId: "{{ taskrun.value.id }}"
+
+      - id: log_project_summary
+        type: io.kestra.core.tasks.log.Log
+        message: "Project '{{ taskrun.value.name }}' has {{ outputs.list_project_tasks.count }} tasks"

@@ -5,6 +5,7 @@ import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
+import org.slf4j.Logger;
 
 import java.net.URI;
 import java.util.List;
@@ -15,11 +16,13 @@ public class TodoistClient {
     private final RunContext runContext;
     private final String apiToken;
     private final String baseUrl;
+    private final Logger logger;
     
     public TodoistClient(RunContext runContext, String apiToken, String baseUrl) {
         this.runContext = runContext;
         this.apiToken = apiToken;
         this.baseUrl = baseUrl;
+        this.logger = runContext.logger();
     }
     
     public TodoistClient(RunContext runContext, String apiToken) {
@@ -43,6 +46,8 @@ public class TodoistClient {
     public Map<String, Object> post(String endpoint, Map<String, Object> body) throws Exception {
         String jsonBody = JacksonMapper.ofJson().writeValueAsString(body);
         
+        logger.debug("POST request to {}", endpoint);
+        
         HttpRequest request = createRequestBuilder(baseUrl + endpoint)
             .method("POST")
             .body(HttpRequest.StringRequestBody.builder().content(jsonBody).build())
@@ -51,13 +56,17 @@ public class TodoistClient {
         HttpResponse<String> response = sendRequest(request);
         
         if (response.getStatus().getCode() >= 400) {
+            logger.error("API request failed: {} - {}", response.getStatus().getCode(), response.getBody());
             throw new TodoistApiException("API request failed: " + response.getStatus().getCode() + " - " + response.getBody());
         }
         
+        logger.debug("POST request successful: {}", response.getStatus().getCode());
         return JacksonMapper.ofJson().readValue(response.getBody(), Map.class);
     }
     
     public Map<String, Object> get(String endpoint) throws Exception {
+        logger.debug("GET request to {}", endpoint);
+        
         HttpRequest request = createRequestBuilder(baseUrl + endpoint)
             .method("GET")
             .build();
@@ -65,9 +74,11 @@ public class TodoistClient {
         HttpResponse<String> response = sendRequest(request);
         
         if (response.getStatus().getCode() >= 400) {
+            logger.error("API request failed: {} - {}", response.getStatus().getCode(), response.getBody());
             throw new TodoistApiException("API request failed: " + response.getStatus().getCode() + " - " + response.getBody());
         }
         
+        logger.debug("GET request successful: {}", response.getStatus().getCode());
         return JacksonMapper.ofJson().readValue(response.getBody(), Map.class);
     }
     

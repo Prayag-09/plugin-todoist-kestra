@@ -1,0 +1,35 @@
+id: batch-task-creation
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Create multiple tasks at once using batch operations.
+  Demonstrates efficient bulk task creation.
+
+tasks:
+  - id: create_sprint_tasks
+    type: io.kestra.plugin.todoist.tasks.create.CreateTaskBatch
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    tasks:
+      - content: "Sprint Planning Meeting"
+        priority: 4
+        due_string: "monday at 9:00"
+      - content: "Daily Standup - Monday"
+        priority: 3
+        due_string: "monday at 10:00"
+      - content: "Code Review Session"
+        priority: 3
+        due_string: "monday at 14:00"
+      - content: "Sprint Retrospective"
+        priority: 3
+        due_string: "friday at 16:00"
+      - content: "Deploy to Production"
+        priority: 4
+        due_string: "friday at 17:00"
+
+  - id: log_results
+    type: io.kestra.core.tasks.log.Log
+    message: |
+      Batch creation completed:
+      Total: {{ outputs.create_sprint_tasks.totalCount }}
+      Success: {{ outputs.create_sprint_tasks.successCount }}
+      Failed: {{ outputs.create_sprint_tasks.failureCount }}

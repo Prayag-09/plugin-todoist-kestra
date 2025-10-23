@@ -1,0 +1,50 @@
+id: task-management-workflow
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Complete task management workflow demonstrating all operations:
+  create, read, update, complete, reopen, and delete.
+
+tasks:
+  - id: create_task
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Test workflow task - {{ execution.startDate }}"
+    taskDescription: "This task is created by an automated workflow"
+    priority: 1
+
+  - id: get_task
+    type: io.kestra.plugin.todoist.tasks.read.GetTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: update_task
+    type: io.kestra.plugin.todoist.tasks.update.UpdateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+    content: "Updated: Test workflow task"
+    priority: 4
+    dueString: "tomorrow"
+
+  - id: complete_task
+    type: io.kestra.plugin.todoist.tasks.update.CompleteTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: wait_a_moment
+    type: io.kestra.core.tasks.flows.Sleep
+    duration: PT2S
+
+  - id: reopen_task
+    type: io.kestra.plugin.todoist.tasks.update.ReopenTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: final_complete
+    type: io.kestra.plugin.todoist.tasks.update.CompleteTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: log_completion
+    type: io.kestra.core.tasks.log.Log
+    message: "Workflow completed successfully for task {{ outputs.create_task.taskId }}"

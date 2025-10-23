@@ -1,0 +1,65 @@
+id: conditional-task-creation
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Create tasks conditionally based on input parameters.
+  Demonstrates conditional logic in workflows.
+
+inputs:
+  - id: environment
+    type: STRING
+    defaults: "production"
+  - id: severity
+    type: STRING
+    defaults: "high"
+
+tasks:
+  - id: check_environment
+    type: io.kestra.core.tasks.flows.If
+    condition: "{{ inputs.environment == 'production' }}"
+    then:
+      - id: create_production_alert
+        type: io.kestra.plugin.todoist.tasks.create.CreateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        content: "PRODUCTION ALERT: {{ inputs.severity }} severity issue detected"
+        priority: 4
+        dueString: "today"
+    else:
+      - id: create_staging_alert
+        type: io.kestra.plugin.todoist.tasks.create.CreateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        content: "Staging issue: {{ inputs.severity }} severity"
+        priority: 2
+        dueString: "tomorrow"
+
+  - id: check_severity
+    type: io.kestra.core.tasks.flows.Switch
+    value: "{{ inputs.severity }}"
+    cases:
+      critical:
+        - id: create_critical_task
+          type: io.kestra.plugin.todoist.tasks.create.CreateTask
+          apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+          content: "CRITICAL: Immediate action required"
+          priority: 4
+          dueString: "today"
+      high:
+        - id: create_high_task
+          type: io.kestra.plugin.todoist.tasks.create.CreateTask
+          apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+          content: "HIGH: Action required soon"
+          priority: 3
+          dueString: "today"
+      medium:
+        - id: create_medium_task
+          type: io.kestra.plugin.todoist.tasks.create.CreateTask
+          apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+          content: "MEDIUM: Review when possible"
+          priority: 2
+          dueString: "this week"
+      default:
+        - id: create_low_task
+          type: io.kestra.plugin.todoist.tasks.create.CreateTask
+          apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+          content: "LOW: No immediate action needed"
+          priority: 1

@@ -1,0 +1,28 @@
+id: create-and-complete-task
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Create a task in Todoist and mark it as completed.
+  This flow demonstrates the basic task lifecycle.
+
+tasks:
+  - id: create_task
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Review pull request #{{ execution.id }}"
+    taskDescription: "Review and approve the pull request for the new feature"
+    priority: 3
+    dueString: "today"
+
+  - id: log_task_created
+    type: io.kestra.core.tasks.log.Log
+    message: "Task created with ID: {{ outputs.create_task.taskId }}"
+
+  - id: complete_task
+    type: io.kestra.plugin.todoist.tasks.update.CompleteTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    taskId: "{{ outputs.create_task.taskId }}"
+
+  - id: log_task_completed
+    type: io.kestra.core.tasks.log.Log
+    message: "Task {{ outputs.create_task.taskId }} completed successfully"
