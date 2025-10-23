@@ -1,0 +1,40 @@
+id: daily-task-creation
+namespace: io.kestra.plugin.todoist
+
+description: |
+  Scheduled flow to create daily recurring tasks.
+  Demonstrates scheduled automation with Todoist.
+
+triggers:
+  - id: daily_schedule
+    type: io.kestra.core.models.triggers.types.Schedule
+    cron: "0 9 * * *" # Every day at 9 AM
+
+tasks:
+  - id: create_standup_task
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Daily standup - {{ trigger.date | date('yyyy-MM-dd') }}"
+    taskDescription: "Attend the daily standup meeting"
+    priority: 3
+    dueString: "today at 10:00"
+
+  - id: create_review_task
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Review pull requests - {{ trigger.date | date('yyyy-MM-dd') }}"
+    taskDescription: "Review and approve pending pull requests"
+    priority: 2
+    dueString: "today at 14:00"
+
+  - id: create_planning_task
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Plan tomorrow's tasks - {{ trigger.date | date('yyyy-MM-dd') }}"
+    taskDescription: "Review and plan tasks for tomorrow"
+    priority: 2
+    dueString: "today at 17:00"
+
+  - id: log_tasks_created
+    type: io.kestra.core.tasks.log.Log
+    message: "Created 3 daily tasks for {{ trigger.date | date('yyyy-MM-dd') }}"

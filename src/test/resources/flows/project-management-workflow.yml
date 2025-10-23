@@ -1,0 +1,28 @@
+id: project-management-workflow
+namespace: io.kestra.plugin.todoist
+
+description: Complete project management workflow
+
+tasks:
+  - id: create_project
+    type: io.kestra.plugin.todoist.tasks.create.CreateProject
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    name: "Test Project - {{ execution.startDate }}"
+    color: "blue"
+    isFavorite: true
+
+  - id: create_tasks_in_project
+    type: io.kestra.plugin.todoist.tasks.create.CreateTask
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    content: "Task in new project"
+    projectId: "{{ outputs.create_project.projectId }}"
+
+  - id: list_project_tasks
+    type: io.kestra.plugin.todoist.tasks.read.ListTasks
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    projectId: "{{ outputs.create_project.projectId }}"
+
+  - id: delete_project
+    type: io.kestra.plugin.todoist.tasks.delete.DeleteProject
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    projectId: "{{ outputs.create_project.projectId }}"

@@ -1,0 +1,35 @@
+id: list-and-update-tasks
+namespace: io.kestra.plugin.todoist
+
+description: |
+  List all tasks from a specific project and update their priorities.
+  This flow demonstrates bulk operations.
+
+inputs:
+  - id: project_id
+    type: STRING
+    defaults: "2203306141"
+
+tasks:
+  - id: list_tasks
+    type: io.kestra.plugin.todoist.tasks.read.ListTasks
+    apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+    projectId: "{{ inputs.project_id }}"
+
+  - id: log_task_count
+    type: io.kestra.core.tasks.log.Log
+    message: "Found {{ outputs.list_tasks.count }} tasks in project {{ inputs.project_id }}"
+
+  - id: process_tasks
+    type: io.kestra.core.tasks.flows.EachSequential
+    value: "{{ outputs.list_tasks.tasks }}"
+    tasks:
+      - id: update_priority
+        type: io.kestra.plugin.todoist.tasks.update.UpdateTask
+        apiToken: "{{ secret('TODOIST_API_TOKEN') }}"
+        taskId: "{{ taskrun.value.id }}"
+        priority: 2
+
+      - id: log_updated
+        type: io.kestra.core.tasks.log.Log
+        message: "Updated task: {{ taskrun.value.content }}"
